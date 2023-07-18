@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:pagenation_search_brawser/data/local/shared_pref.dart';
 
 class HistoryScreen extends StatefulWidget {
-  const HistoryScreen({super.key, required this.history});
+  const HistoryScreen({super.key, required this.history, required this.voidCallback});
 
   final List<String> history;
+  final VoidCallback voidCallback;
 
   @override
   State<HistoryScreen> createState() => _HistoryScreenState();
@@ -32,46 +33,40 @@ class _HistoryScreenState extends State<HistoryScreen> {
               onPressed: () {
                 setState(() {
                   historys.clear();
+                  widget.history.clear();
+                  widget.voidCallback.call();
                 });
               },
               icon: const Icon(Icons.delete))
         ],
       ),
-      body: Column(
-        children: [
-          ...List.generate(
-              historys.length,
-              (index) => GestureDetector(
-                    onLongPress: () {
-                      StorageRepository.deleteString(historys[index]);
-                      historys.remove(historys[index]);
-                      final snackBar = SnackBar(
-                        content: const Text('delete this history'),
-                        action: SnackBarAction(
-                          label: 'ok',
-                          onPressed: () {
-                            // Some code to undo the change.
-                          },
-                        ),
-                      );
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            ...List.generate(
+                historys.length,
+                (index) => GestureDetector(
+                      child: ListTile(
+                        title: Text(widget.history[index]),
+                        leading: GestureDetector(
+                            onTap: () {},
+                            child: IconButton(onPressed: (){
+                              StorageRepository.deleteString(historys[index]);
+                              historys.remove(historys[index]);
+                              widget.history.remove(historys[index]);
+                              const snackBar = SnackBar(
+                                content: Text('delete this history'),
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                              setState(() {
+                                widget.voidCallback.call();
 
-                      // Find the ScaffoldMessenger in the widget tree
-                      // and use it to show a SnackBar.
-                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                      setState(() {});
-                    },
-                    child: ListTile(
-                      title: Text(widget.history[index]),
-                      leading: GestureDetector(
-                          onTap: () {
-                          },
-                          child: Icon(
-                            Icons.highlight_remove_sharp,
-                            color: Colors.red.shade500,
-                          )),
-                    ),
-                  )),
-        ],
+                              });
+                            }, icon: Icon(Icons.highlight_remove,color: Colors.red.shade400,))),
+                      ),
+                    )),
+          ],
+        ),
       ),
     );
   }
