@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:pagenation_search_brawser/data/local/shared_pref.dart';
 import 'package:pagenation_search_brawser/ui/search_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await StorageRepository.getInstance();
   runApp(const MyApp());
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

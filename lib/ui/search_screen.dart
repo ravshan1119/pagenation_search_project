@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:pagenation_search_brawser/data/local/shared_pref.dart';
 import 'package:pagenation_search_brawser/data/model/google_search_model.dart';
 import 'package:pagenation_search_brawser/data/model/organic_model.dart';
 import 'package:pagenation_search_brawser/data/model/universal_data.dart';
@@ -7,6 +8,7 @@ import 'package:pagenation_search_brawser/data/network/api_provider.dart';
 import 'package:pagenation_search_brawser/ui/history_screen.dart';
 import 'package:pagenation_search_brawser/ui/widgets/search_screen_shimmer.dart';
 import 'package:pagenation_search_brawser/utils/app_images.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PaginationDataScreen extends StatefulWidget {
   const PaginationDataScreen({Key? key}) : super(key: key);
@@ -18,6 +20,10 @@ class PaginationDataScreen extends StatefulWidget {
 class _PaginationDataScreenState extends State<PaginationDataScreen> {
   final TextEditingController queryController = TextEditingController();
   final ScrollController scrollController = ScrollController();
+  final Uri uri = Uri.parse("");
+
+
+  final Uri url = Uri.parse("uri");
 
   int currentPage = 1;
   int countOfPage = 5;
@@ -26,6 +32,12 @@ class _PaginationDataScreenState extends State<PaginationDataScreen> {
   List<String> history = [];
 
   List<OrganicModel> organicModels = [];
+
+  Future<void> _launchUrl() async {
+    if (!await launchUrl(url)) {
+      throw Exception('Could not launch $url');
+    }
+  }
 
   _fetchResult() async {
     setState(() {
@@ -104,6 +116,7 @@ class _PaginationDataScreenState extends State<PaginationDataScreen> {
               },
               onSubmitted: (v) {
                 setState(() {
+                  StorageRepository.putString(queryText, queryText);
                   history.add(queryText);
                   organicModels = [];
                   currentPage = 1;
@@ -143,6 +156,42 @@ class _PaginationDataScreenState extends State<PaginationDataScreen> {
               textInputAction: TextInputAction.search,
             ),
           ),
+          SizedBox(
+            height: 30,
+            width: double.infinity,
+            child: ListView(
+              physics: const BouncingScrollPhysics(),
+              scrollDirection: Axis.horizontal,
+              children: [
+                ...List.generate(history.length, (index) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 5),
+                  child: GestureDetector(
+                    onTap: (){
+                      setState(() {
+                        StorageRepository.putString(queryText, queryText);
+                        history.add(queryText);
+                        organicModels = [];
+                        currentPage = 1;
+                        queryController.text=queryText;
+                      });
+                      _fetchResult();
+                    },
+                    child: Container(
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: Colors.grey,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Center(child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(history[index]),
+                      )),
+                    ),
+                  ),
+                ))
+              ],
+            ),
+          ),
           Expanded(
               child: ListView(
             controller: scrollController,
@@ -166,10 +215,15 @@ class _PaginationDataScreenState extends State<PaginationDataScreen> {
                         ),
                       ),
                       Text(organicModel.snippet),
-                      Text(
-                        organicModel.link,
-                        maxLines: 1,
-                        style: const TextStyle(color: Colors.blue),
+                      GestureDetector(
+                        onTap: (){
+
+                        },
+                        child: Text(
+                          organicModel.link,
+                          maxLines: 1,
+                          style: const TextStyle(color: Colors.blue),
+                        ),
                       ),
                       Text(organicModel.date),
                     ],
